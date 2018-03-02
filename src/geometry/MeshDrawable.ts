@@ -40,11 +40,11 @@ class MeshDrawable extends Drawable {
 
   initMesh(name:string){
     if(name == 'no'){
-      debugger;
+      //debugger;
     } else {
     var objStr = document.getElementById(name).innerHTML;
     var opt = { encoding: 'utf8' };
-      debugger;
+      //debugger;
     var mesh = new OBJ.Mesh(objStr);
     // OBJ.initMeshBuffers(gl, mesh);
     

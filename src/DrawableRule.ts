@@ -17,6 +17,7 @@ class Shape {
   scale:vec3;
   terminal:boolean;
   
+  
   constructor(symbol: string, geo:MeshDrawable, position: vec3, rotation:vec3, scale:vec3, terminal:boolean){
     this.symbol = symbol;
     this.geo = geo;
@@ -52,6 +53,7 @@ class DrawableRule {
   cube:MeshDrawable;
   sphere:MeshDrawable;
   branch:MeshDrawable;
+  flower:MeshDrawable;
   
   spread:number;
 
@@ -60,6 +62,9 @@ class DrawableRule {
   flowerNormals: Float32Array;
 
   shapes:Set<Shape>;
+
+  density:number;
+  mode:string;
 
   
   constructor(instructions: string, mesh:MeshDrawable) {
@@ -90,6 +95,9 @@ class DrawableRule {
     //this.turtle.initFlower(flower.currPositions, flower.currNormals, flower.currIndices);
 
     this.shapes = new Set<Shape>();
+
+    this.density = 100;
+    this.mode = 'random';
   }
 
   LoadShapes(){
@@ -102,6 +110,10 @@ class DrawableRule {
     //branches
     this.branch = new MeshDrawable(vec3.fromValues(0,0,0));
     this.branch.initMesh('branch.obj');
+
+    //flower
+    this.flower = new MeshDrawable(vec3.fromValues(0,0,0));
+    this.flower.initMesh('flower.obj');
 
   }
 
@@ -228,41 +240,167 @@ class DrawableRule {
 
   applyRandomRule(shape:Shape) : Set<Shape> {
     var set = new Set<Shape>();
-    if(shape.symbol == 'cube'){
-      //spire rule
-      var pos = vec3.create();
-      vec3.copy(pos, shape.position);
-      
+    var f = Math.random();
+    if(shape.symbol == 'building'){
+      if(f > 0.75){
+          if(shape.scale[0] < shape.scale[1]){
+            //spire rule: for buildings that are taller than they are wide
+            set.add(shape);
+            var pos = vec3.create();
+            vec3.copy(pos, shape.position);
+            var s = vec3.fromValues(0,shape.scale[1],0);   
+            pos = vec3.add(pos, pos, s);
+            //vec3.copy(pos, shape.position);
 
-      var rot = vec3.create();
-      vec3.copy(rot, shape.rotation);
 
-      var scale = vec3.create();
-      vec3.copy(scale, shape.scale);
-      var newShape = new Shape('branch', this.branch, pos, rot, scale, true);
-      set.add(newShape);
+            var rot = vec3.create();
+            vec3.copy(rot, shape.rotation);
 
-      var weh = vec3.fromValues(0,3,0);   
-      pos = vec3.add(pos, pos, weh);
-      var newShape = new Shape('sphere', this.sphere, pos, rot, scale, true);
-      set.add(newShape);
+            var scale = vec3.fromValues(shape.scale[0] / 2.0, shape.scale[1] / 2.0,shape.scale[2] / 2.0);
+            var newShape = new Shape('branch', this.branch, pos, rot, scale, true);
+            set.add(newShape);
+
+            var weh = vec3.fromValues(0,scale[1] * 2,0);   
+            pos = vec3.add(pos, pos, weh);
+            var scale2 = vec3.fromValues(shape.scale[0], shape.scale[0],shape.scale[0]);
+            var newShape = new Shape('sphere', this.sphere, pos, rot, scale2, true);
+            set.add(newShape);
+        } else {
+              //dome rule: for buildings that are wider than they are tall
+              set.add(shape);
+              var pos = vec3.create();
+              vec3.copy(pos, shape.position);
+              var ab = vec3.fromValues(0, shape.scale[1], 0);
+              vec3.add(pos,pos,ab);
+              var rot = vec3.create();
+              vec3.copy(rot, shape.rotation);
+
+              var scale = vec3.create();
+              vec3.copy(scale, shape.scale);
+                // var newShape = new Shape('branch', this.branch, pos, rot, scale, true);
+                // set.add(newShape);
+
+              
+              var newShape = new Shape('sphere', this.sphere, pos, rot, scale, true);
+              set.add(newShape);
+          }
+    } else {
+        //subdivide
+        if(shape.scale[0] < shape.scale[1]){
+          //spire stick: turns taller buildings into two compartments connects by a rod
+          //subdives the parent along the y axis
+          var pos = vec3.create();
+          vec3.copy(pos, shape.position);
+          var s = vec3.fromValues(0,shape.scale[1] / 4,0); 
+          var t = vec3.fromValues(0,shape.scale[1],0); 
+          var rot = vec3.create();
+          
+          var topPos = vec3.create();
+          vec3.add(topPos, pos, t);
+          vec3.copy(rot, shape.rotation); 
+          var scale = vec3.fromValues(shape.scale[0] / 2.0, shape.scale[1] / 2.0,shape.scale[2] / 2.0); 
+          
+          //top half of stick 
+          var topHalf = new Shape('top', this.cube, topPos, rot, scale, false);
+          set.add(topHalf);
+          //bottom half of stick
+          var bottomPos = vec3.create();
+          vec3.subtract(bottomPos, pos, s);
+          var bottomHalf = new Shape('bottom', this.cube, bottomPos, rot, scale, true);
+          set.add(bottomHalf);
+          //vec3.copy(pos, shape.position);
+
+
+          //stick
+          //var stickRot = vec3.fromValues(0,0,90);
+          var stick = new Shape('stick', this.branch, pos, rot, scale, true);
+          set.add(stick);
+        } else  {
+            // wide stick: turns wide buildings into two compartments connected by a rod
+            //subdivides along the z axis
+            var pos = vec3.create();
+            vec3.copy(pos, shape.position);
+            var s = vec3.fromValues(0,0,shape.scale[1] / 4); 
+            var t = vec3.fromValues(0,0,shape.scale[1]); 
+            var rot = vec3.create();
+            
+            var topPos = vec3.create();
+            vec3.add(topPos, pos, t);
+            vec3.copy(rot, shape.rotation); 
+            var scale = vec3.fromValues(shape.scale[0] / 2.0, shape.scale[1] / 2.0,shape.scale[2] / 2.0); 
+            
+            //top half of stick 
+            var topHalf = new Shape('top', this.cube, topPos, rot, scale, false);
+            set.add(topHalf);
+            //bottom half of stick
+            var bottomPos = vec3.create();
+            vec3.subtract(bottomPos, pos, s);
+            var bottomHalf = new Shape('bottom', this.cube, bottomPos, rot, scale, true);
+            set.add(bottomHalf);
+            //vec3.copy(pos, shape.position);
+  
+  
+            //stick
+            var stickRot = vec3.fromValues(0,0,90);
+            var stick = new Shape('stick', this.branch, pos, rot, scale, true);
+            set.add(stick);
+        
+        }
+      }
+        
+        
+    } else if (shape.symbol == 'top'){
+      //garden top rule
+      if(f > 0.75){
+        set.add(shape);
+          var pos = vec3.create();
+          vec3.copy(pos, shape.position);
+          var ab = vec3.fromValues(0, shape.scale[1] * 1.02, 0);
+          vec3.add(pos,pos,ab);
+          var rot = vec3.create();
+          vec3.copy(rot, shape.rotation);
+
+          var scale = vec3.create();
+          vec3.copy(scale, shape.scale);
+                // var newShape = new Shape('branch', this.branch, pos, rot, scale, true);
+                // set.add(newShape);
+
+              
+          var newShape = new Shape('flower', this.flower, pos, rot, scale, true);
+          set.add(newShape);
+      } else {
+        var pos = vec3.create();
+          vec3.copy(pos, shape.position);
+          var s = vec3.fromValues(0,shape.scale[1] / 4,0); 
+          var t = vec3.fromValues(0,shape.scale[1],0); 
+          var rot = vec3.create();
+          
+          var topPos = vec3.create();
+          vec3.add(topPos, pos, t);
+          vec3.copy(rot, shape.rotation); 
+          var scale = vec3.fromValues(shape.scale[0] / 2.0, shape.scale[1] / 2.0,shape.scale[2] / 2.0); 
+          
+          //top half of stick 
+          var topHalf = new Shape('top', this.cube, topPos, rot, scale, false);
+          set.add(topHalf);
+          //bottom half of stick
+          var bottomPos = vec3.create();
+          vec3.subtract(bottomPos, pos, s);
+          var bottomHalf = new Shape('bottom', this.cube, bottomPos, rot, scale, true);
+          set.add(bottomHalf);
+          //vec3.copy(pos, shape.position);
+
+
+          //stick
+          //var stickRot = vec3.fromValues(0,0,90);
+          var stick = new Shape('stick', this.branch, pos, rot, scale, true);
+
+      }
+          
     }
-    //dome rule
-    // var pos = vec3.create();
-    //   vec3.copy(pos, shape.position);
       
+    //console.log('set size is ' + set.size);
 
-    //   var rot = vec3.create();
-    //   vec3.copy(rot, shape.rotation);
-
-    //   var scale = vec3.create();
-    //   vec3.copy(scale, shape.scale);
-    //   var newShape = new Shape('branch', this.branch, pos, rot, scale, true);
-    //   set.add(newShape);
-
-    //   pos = this.move(pos);
-    //   var newShape = new Shape('sphere', this.sphere, pos, rot, scale, true);
-    //   set.add(newShape);
     return set;
   }
 
@@ -281,24 +419,33 @@ class DrawableRule {
   }
 
   drawIter(iter:number){
-    // debugger;
+
     for(var i = 0; i < iter; i++){
       var successors = new Set<Shape>();
       for(let s of this.shapes){
         
         if(!s.terminal){
-            successors = this.applyRandomRule(s);
+          //console.log(' termianl')
+            var su = this.applyRandomRule(s);
+            for(let n of su){
+              successors.add(n);
+            }
             // debugger;
             this.shapes.delete(s);
             //t.forEach(s.add, s);     
         }
+
          // append new set to 
       }
-      successors.forEach(this.shapes.add,this.shapes);
+      for(let m of successors){
+        this.shapes.add(m);
+      }
     }
-    debugger;
+
     this.drawShapes();
   }
+
+  
 
   drawShapes(){
     debugger;
@@ -348,43 +495,97 @@ class DrawableRule {
   }
 
   draw(){
-    //this.X();
-    // this.drawFlower();
-    // console.log(this.instructions);
-    for(var i = 0; i < this.instructions.length; i++){
-      var rule = this.instructions.charAt(i).toString();
-      if( rule == 'F'){
-        this.F();
-      } else if ( rule == 'X'){
-        this.X();
-      } else if ( rule == '+'){
-        this.rotateRight();
-      } else if (rule == '-'){
-        this.rotateLeft();
-      } else if (rule == '&'){
-        this.pitch();
-      } else if (rule == '/'){
-        this.roll();
-      } else if (rule == '['){
-        this.push();
-      } else if (rule == ']'){
-        this.pop();
-      } else if (rule == '"'){
-        this.scale();
-      } else if (rule == 'f'){
-        this.drawFlower();
-      }
-      
+  }
+
+  discWarp(sample: vec3) : vec3 {
+    var phi, r, u ,v;
+    var a = 2 * sample[0] - 1;
+    var b = 2 * sample[1] - 1;
+
+    if(a > -b){
+        if(a > b){
+            r = a;
+            phi = (Math.PI/4) * (b/a);
+        } else {
+            r = b;
+            phi = (Math.PI/ 4) * (2- (a/b));
+        }
+    } else {
+        if(a < b){
+            r = -a;
+            phi = (Math.PI/ 4) * (4 + (b/a));
+        } else {
+            r = -1.0 * b;
+            if( b != 0){
+                phi = (Math.PI / 4) * (6 - (a/b));
+            } else {
+                phi = 0;
+            }
+        }
     }
-    // this.F();
-    // this.mesh.appendInd(this.getInd());
-    // this.mesh.appendPos(this.getPos());
-    // this.mesh.appendNor(this.getNor());
-    // this.X();
-    // this.mesh.appendInd(this.getInd());
-    // this.mesh.appendPos(this.getPos());
-    // this.mesh.appendNor(this.getNor());
-    //this.F();
+    u = r * Math.cos(phi);
+    v = r * Math.sin(phi);
+    var vect = vec3.fromValues(u,0,v);
+    return vect;
+}
+
+  drawCity(){
+    if(this.mode == 'random'){
+      for( var i = 0; i < this.density; i ++ ){
+      // put a random position
+      var position = vec3.create();
+      var rotation = vec3.create();
+      var scale = vec3.create();
+
+      position[0]  = Math.floor( Math.random() * 200 - 100) * 2;
+      position[2]   = Math.floor( Math.random() * 200 - 100) * 2;
+      // put a random rotation
+      rotation[1]   = Math.random()*Math.PI*2;
+      // put a random scale
+      scale[0]  = Math.random() * Math.random() * Math.random() * Math.random() * 50 + 10;
+      scale[1]  = (Math.random() * Math.random() * Math.random() * scale[0]) * 8 + 8;
+      scale[2]  = scale[0];
+      position[1] = scale[1] * 0.99;
+      var s = new Shape('building', this.cube, position, rotation, scale, false);
+      this.shapes.add(s);
+      console.log(this.shapes.size);
+      }
+    } else if(this.mode == 'radial'){
+      //based on disk sampling
+      var sqrtVal = (Math.sqrt(this.density) + 0.5);
+      // A number useful for scaling a square of size sqrtVal x sqrtVal to 1 x 1
+          var invSqrtVal = 1 / sqrtVal;
+  
+          for( var i = 0; i < this.density; i ++ ){
+            // put a random position
+            var position = vec3.create();
+            var rotation = vec3.create();
+            var scale = vec3.create();
+            var y = i / sqrtVal;
+            var x = i % sqrtVal;
+            var v = vec3.fromValues((x+ 0.5) * invSqrtVal,(y+ 0.5) * invSqrtVal, 0);
+            v = this.discWarp(v);
+            position[0]  = v[0] * 200;
+            position[2]   = v[2] * 200;
+            // put a random rotation
+            rotation[1]   = Math.random()*Math.PI*2;
+            // put a random scale
+            scale[0]  = Math.random() * Math.random() * Math.random() * Math.random() * 50 + 10;
+            scale[1]  = (Math.random() * Math.random() * Math.random() * scale[0]) * 8 + 8;
+            scale[2]  = scale[0];
+            position[1] = scale[1] * 0.99;
+            var s = new Shape('building', this.cube, position, rotation, scale, false);
+            this.shapes.add(s);
+            console.log(this.shapes.size);
+          }
+    }
+      
+      
+    
+  
+
+    
+    //this.drawShapes();
   }
 
 
