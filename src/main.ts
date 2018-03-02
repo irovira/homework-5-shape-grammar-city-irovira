@@ -13,13 +13,13 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import LSystem from './LSystem';
 //import * as OBJ from 'webgl-obj-loader';
 import * as fs from 'fs';
-
+import DrawableRule from './DrawableRule';
 
 var OBJ = require('webgl-obj-loader');
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  axiom: 'FF[f]A',
+  axiom: 'C',
   tesselations: 5,
   spread: 60,
   iter: 1,
@@ -30,11 +30,13 @@ const controls = {
 
 let icosphere: Icosphere;
 let square: Square;
-let cube: Cube;
+// let cube: Cube;
 let meshOBJ: any;
 let mesh: MeshDrawable;
+
 let flower:MeshDrawable;
 let lsystem: LSystem;
+
 //let mesh: OBJ.Mesh;
 
 
@@ -42,26 +44,16 @@ let lsystem: LSystem;
 
 function loadScene() {
   mesh = new MeshDrawable(vec3.fromValues(0,0,0));
-  mesh.initMesh('branch.obj');
+  mesh.initMesh('no');
+  // lsystem = new LSystem(controls.axiom, mesh, flower, controls.spread);
+  // lsystem.spread = controls.spread;
 
-  flower = new MeshDrawable(vec3.fromValues(0.75,-1,0));
-  flower.initMesh('flower.obj'); 
-  flower.scaleMesh(10);
-  flower.createMesh();
-
-
-  lsystem = new LSystem(controls.axiom, mesh, flower, controls.spread);
-  lsystem.spread = controls.spread;
-  lsystem.expand(controls.iter);
-  lsystem.draw();
+  var dR = new DrawableRule(controls.axiom, mesh);
   
-  //square = new Square(vec3.fromValues(0,-0.5,0));
-  //square.create();
-  // mesh.createMesh();
+  dR.initializeShapes(controls.axiom);
+  dR.drawIter(1);
 
-  // var test = new LSystem('X');
-  // var s = test.expand(2);
-  // console.log(test.currentRule);
+  mesh.createMesh();
 }
 
 function main() {
@@ -120,7 +112,7 @@ function main() {
     lambert.setGeometryColor(currColor);
     renderer.render(camera, lambert, [
       mesh,
-      flower,
+      // flower,
       //square
       //cube,
     ]);

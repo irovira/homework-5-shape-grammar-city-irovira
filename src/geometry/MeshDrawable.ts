@@ -13,6 +13,10 @@ class MeshDrawable extends Drawable {
   currIndices: Array<number>;
   currPositions: Array<number>;
   currNormals: Array<number>;
+
+  baseIndices: Array<number>;
+  basePositions: Array<number>;
+  baseNormals: Array<number>;
   center: vec4;
 
 
@@ -22,16 +26,25 @@ class MeshDrawable extends Drawable {
     this.isMesh = true;
     this.currIndices = new Array();
     this.currPositions = new Array();
-
     this.currNormals = new Array();
+
+    this.baseNormals = new Array();
+
+    this.baseIndices = new Array();
+    this.basePositions = new Array();
+
+    //this.baseNormals = new Array();
 
     
   }
 
   initMesh(name:string){
+    if(name == 'no'){
+      debugger;
+    } else {
     var objStr = document.getElementById(name).innerHTML;
     var opt = { encoding: 'utf8' };
-
+      debugger;
     var mesh = new OBJ.Mesh(objStr);
     // OBJ.initMeshBuffers(gl, mesh);
     
@@ -42,14 +55,14 @@ class MeshDrawable extends Drawable {
     var posSize = (currentMesh.vertices.length / 3) * 4;
     var newPosInd = 0;
     for(var i = 0; i < currentMesh.vertices.length; i = i+3 ){
-      this.currPositions[newPosInd] = currentMesh.vertices[i];
-      this.currPositions[newPosInd+1] = currentMesh.vertices[i+1];
-      this.currPositions[newPosInd+2] = currentMesh.vertices[i+2];
-      this.currPositions[newPosInd+3] = 1.0;
+      this.basePositions[newPosInd] = currentMesh.vertices[i];
+      this.basePositions[newPosInd+1] = currentMesh.vertices[i+1];
+      this.basePositions[newPosInd+2] = currentMesh.vertices[i+2];
+      this.basePositions[newPosInd+3] = 1.0;
       newPosInd = newPosInd + 4;
     }
     //this.positions = new Float32Array(this.currPositions);
-    console.log(currentMesh.vertices);
+    //console.log(currentMesh.vertices);
     //console.log(this.currPositions);
 
 
@@ -57,51 +70,30 @@ class MeshDrawable extends Drawable {
     var norSize = (currentMesh.vertexNormals.length / 3) * 4;
     var newNorInd = 0;
     for(var i = 0; i < currentMesh.vertexNormals.length; i = i+3 ){
-      this.currNormals[newNorInd] = currentMesh.vertexNormals[i];
-      this.currNormals[newNorInd+1] = currentMesh.vertexNormals[i+1];
-      this.currNormals[newNorInd+2] = currentMesh.vertexNormals[i+2];
-      this.currNormals[newNorInd+3] = 0.0;
+      this.baseNormals[newNorInd] = currentMesh.vertexNormals[i];
+      this.baseNormals[newNorInd+1] = currentMesh.vertexNormals[i+1];
+      this.baseNormals[newNorInd+2] = currentMesh.vertexNormals[i+2];
+      this.baseNormals[newNorInd+3] = 0.0;
       newNorInd = newNorInd + 4;
     }
     //this.normals = new Float32Array(this.currNormals);
     
-    this.currIndices = currentMesh.indices;
+    this.baseIndices = currentMesh.indices;
+    debugger;
     //this.indices = new Uint32Array(currentMesh.indices);
     
-    console.log(currentMesh.indices.length);
+    //console.log(currentMesh.indices.length);
     //console.log(mesh.normalBuffer.numItems);
+    }
   }
 
   createMesh() {
 
-    // var objStr = document.getElementById(name).innerHTML;
-    // var opt = { encoding: 'utf8' };
-
-    // var mesh = new OBJ.Mesh(objStr);
-    // OBJ.initMeshBuffers(gl, mesh);
-    // console.log(mesh.normalBuffer.numItems);
-
     this.positions = new Float32Array(this.currPositions);
     this.normals = new Float32Array(this.currNormals);
     this.indices = new Uint32Array(this.currIndices);
-    // this.positions = new Float32Array(new Array<number>());
-    // this.normals = new Float32Array(new Array<number>());
-    // this.indices = new Uint16Array(new Array<number>());
+    debugger;
 
-    // console.log('inside create mesh positions buffer size is ' + this.positions);
-    // console.log('inside create mesh normal buffer size is ' + this.normals);
-    // console.log('inside create mesh index  buffer size is ' + this.indices);
-
-    //OBJ.initMeshBuffers(gl, currentMesh);
-
-    // this.idxBound = true;
-    // this.bufIdx = currentMesh.indexBuffer;
-
-    // this.posBound = true;
-    // this.bufPos = currentMesh.vertexBuffer;
-
-    // this.norBound = true;
-    // this.bufNor = currentMesh.normalBuffer;
 
     this.generateIdx();
     this.generatePos();
@@ -110,8 +102,7 @@ class MeshDrawable extends Drawable {
 
     this.count = this.indices.length;
 
-      
-
+    
     // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
@@ -145,6 +136,7 @@ class MeshDrawable extends Drawable {
 
   appendNor(nor:Array<number>){
     this.currNormals = this.currNormals.concat(nor);
+    debugger;
   }
 
   scaleMesh(num:number){

@@ -140,14 +140,14 @@ expandRule(seed:string): string {
  }
 
  draw(){
-    var dR = new DrawableRule(this.currentRule, this.mesh, this.flower);
+    //var dR = new DrawableRule(this.currentRule, this.mesh, this.flower);
 
-    dR.spread = this.spread;
-    this.mesh.appendInd(dR.getInd());
-    this.mesh.appendPos(dR.getPos());
-    this.mesh.appendNor(dR.getNor());
-    dR.draw();
-    
+    //dR.spread = this.spread;
+    // this.mesh.appendInd(dR.getInd());
+    // this.mesh.appendPos(dR.getPos());
+    // this.mesh.appendNor(dR.getNor());
+    //dR.initializeShapes(this.currentRule);
+    //dR.drawIter(1);
     
     // dR.draw();
 
@@ -155,7 +155,7 @@ expandRule(seed:string): string {
     // this.mesh.appendPos(dR.getPos());
     // this.mesh.appendNor(dR.getNor());
 
-    this.mesh.createMesh();
+    //this.mesh.createMesh();
  }
  
 
