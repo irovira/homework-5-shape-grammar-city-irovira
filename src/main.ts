@@ -78,7 +78,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'density', 100, 300).step(10);
-  gui.add(controls, 'iter', 0, 3).step(1);
+  gui.add(controls, 'iter', 0, 4).step(1);
   gui.add(controls, 'Load Scene');
   // Choose from accepted values
   gui.add(controls, 'mode', [ 'random', 'radial'] );

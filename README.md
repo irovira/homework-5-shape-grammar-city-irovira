@@ -1,4 +1,53 @@
+## Symbol Node Class
 
+- The node class is implemented as Shape inside of DrawableRule.ts and stores the following fields
+
+    - symbol:string;
+    - geo:MeshDrawable;
+    - position:vec3;
+    -rotation:vec3;
+    -scale:vec3;
+    -terminal:boolean;
+## Grammar Design
+
+- Building: based on a random float, the building can either terminate or it be extended
+    -  1. Termination for Tall Buildings: If a building is taller than it is wide, then it terminates in a needle ball
+    -  2. Termination for Wide Buildings: If a building is wider than it is tall, then it temrinates in a dome
+    -  3. Extension for Tall Buildings: If a building is taller than it is wide, then it is subdivded in the y-direction and connected with a rod
+    - 4. Extension for Wide Buildings: If a building is taller than it is wide, then it is subdivded in the z-direction and connected with a rod
+-  5. Top Extension: if a building is extended, then the top extension can either be extended again or it can terminate in a flower based on a random float (this can only be achieved with over 2 iterations)
+
+All VBO calculations are handled inside the DrawableRule.ts class which is called inside the LoadScene() of main.ts
+
+## City Design
+I implemented two different distributions of buildings throughout the city: random and radial. The random method simply uses a random float to place buildings in the plane whereas the radial distribution uses Disc warping on grid samples. These can be edited using GUI.
+
+The GUI can also edit the density of the city, which basically determines how many buildings are present.
+
+![](radial1.png)
+
+Radial with no iterations
+
+![](radial2.png)
+
+Radial with 1 iteration
+
+![](radial3.png)
+
+Radial with 3 iterations
+
+![](radialHigh.png)
+
+Radial with High Density (290)
+
+![](random2.png)
+
+Random with 2 iterations
+
+
+
+
+    
 # Project 5: Shape Grammar
 
 For this assignment you'll be building directly off of the L-system code you
